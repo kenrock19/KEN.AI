@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>KEN.AI</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <main class="app">
+    <header class="header">
+      <div class="logo">K</div>
+
+      <div>
+        <h1>KEN.AI</h1>
+        <p>Your personal EHS, IT, work, and school assistant</p>
+      </div>
+
+      <span class="status">
+        <span class="status-dot"></span>
+        Online
+      </span>
+    </header>
+
+    <section
+      id="chat"
+      class="chat"
+      aria-live="polite"
+      aria-label="KEN.AI conversation"
+    >
+      <div class="message assistant-message">
+        <div class="message-label">KEN.AI</div>
+
+        <div class="message-body">
+          Welcome, Ken! I’m ready to help with EHS, IT, professional
+          emails, Power BI, schoolwork, and your projects. What are
+          we working on?
+        </div>
+      </div>
+    </section>
+
+    <form id="chat-form" class="composer">
+      <label class="sr-only" for="message">
+        Message KEN.AI
+      </label>
+
+      <textarea
+        id="message"
+        rows="1"
+        maxlength="5000"
+        placeholder="Ask KEN.AI anything..."
+        required
+      ></textarea>
+
+      <button id="send-button" type="submit">
+        Send
+      </button>
+    </form>
+
+    <p class="footer-note">
+      KEN.AI may make mistakes. Verify important safety, legal,
+      financial, and technical information.
+    </p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "ken-ai",
+  "version": "1.0.0",
+  "description": "KEN.AI Personal Assistant",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0",
+    "openai": "^5.12.2"
+  }
+}

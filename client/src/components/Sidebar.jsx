@@ -1,4 +1,4 @@
-function Sidebar() {
+function Sidebar({ onNewChat }) {
   return (
     <div
       style={{
@@ -11,7 +11,8 @@ function Sidebar() {
       <h2>KEN.AI</h2>
 
       <button
-        style={{
+  onClick={onNewChat}
+  style={{
           width: "100%",
           padding: "12px",
           marginTop: "20px",

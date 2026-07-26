@@ -1,4 +1,4 @@
-function Sidebar({ onNewChat }) {
+function Sidebar({ onNewChat, conversations }) {
   return (
     <div
       style={{
@@ -25,11 +25,19 @@ function Sidebar({ onNewChat }) {
 
       <h3>Today's Chats</h3>
 
-      <ul>
-        <li>Power BI Dashboard</li>
-        <li>School Assignment</li>
-        <li>Weekly Report</li>
-      </ul>
+<ul style={{ listStyle: "none", padding: 0 }}>
+  {conversations.map((chat) => (
+    <li
+      key={chat.id}
+      style={{
+        padding: "8px 0",
+        cursor: "pointer",
+      }}
+    >
+      {chat.title}
+    </li>
+  ))}
+</ul>
     </div>
   );
 }

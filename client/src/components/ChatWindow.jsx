@@ -1,71 +1,86 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-function ChatWindow() {
-  const [messages, setMessages] = useState([]);
-
-  const [input, setInput] = useState("");
-
-const sendMessage = async () => {
-  if (!input.trim()) return;
-
-  const userMessage = {
-    sender: "You",
-    text: input,
-  };
-
-  setMessages((prev) => [...prev, userMessage]);
-
-setMessages((prev) => [
-  ...prev,
-  {
-    sender: "KEN.AI",
-    text: "Thinking...",
-  },
-]);
-
-  const currentInput = input;
-  setInput("");
-
+function ChatWindow({ setChatTitle }) {
+  const [messages, setMessages] = useState(() => {
   try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: currentInput,
-      }),
-    });
+    const savedMessages = localStorage.getItem(
+      "kenai-current-chat"
+    );
 
-    const data = await response.json();
+    return savedMessages ? JSON.parse(savedMessages) : [];
+  } catch {
+    return [];
+  }
+});  const [input, setInput] = useState("");
+useEffect(() => {
+  localStorage.setItem(
+    "kenai-current-chat",
+    JSON.stringify(messages)
+  );
+}, [messages]);
+  async function sendMessage() {
+    if (!input.trim()) return;
 
-    if (!response.ok) {
-      throw new Error(data.error || "KEN.AI could not answer.");
-    }
-
-    setMessages((prev) => {
-  const updated = [...prev];
-
-  updated[updated.length - 1] = {
-    sender: "KEN.AI",
-    text: data.reply,
-  };
-
-  return updated;
-});
-  } catch (error) {
-  setMessages((prev) => {
-    const updated = [...prev];
-
-    updated[updated.length - 1] = {
-      sender: "KEN.AI",
-      text: error.message || "Unable to connect to server.",
+    const userMessage = {
+      sender: "You",
+      text: input,
     };
+    if (setChatTitle) {
+      setChatTitle(input);
+    }
+    setMessages((prev) => [...prev, userMessage]);
 
-    return updated;
-  });
-}
-};
+    setMessages((prev) => [
+      ...prev,
+      {
+        sender: "KEN.AI",
+        text: "Thinking...",
+      },
+    ]);
+
+    const currentInput = input;
+    setInput("");
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: currentInput,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "KEN.AI could not answer.");
+      }
+
+      setMessages((prev) => {
+        const updated = [...prev];
+
+        updated[updated.length - 1] = {
+          sender: "KEN.AI",
+          text: data.reply,
+        };
+
+        return updated;
+      });
+    } catch (error) {
+      setMessages((prev) => {
+        const updated = [...prev];
+
+        updated[updated.length - 1] = {
+          sender: "KEN.AI",
+          text: error.message || "Unable to connect to server.",
+        };
+
+        return updated;
+      });
+    }
+  }
 
   return (
     <div

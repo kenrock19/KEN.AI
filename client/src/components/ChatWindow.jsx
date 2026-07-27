@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Message from "./Message";
 
 function ChatWindow({
   chatId,
@@ -18,8 +19,8 @@ function ChatWindow({
     const currentInput = input.trim();
 
     if (!currentInput || isLoading) {
-      return;
-    }
+  return;
+}
 
     const userMessage = {
       sender: "You",
@@ -122,21 +123,12 @@ function ChatWindow({
         }}
       >
         {messages.map((message, index) => (
-          <div
-            key={`${message.sender}-${index}`}
-            style={{
-              marginBottom: "20px",
-              background: "#183763",
-              padding: "15px",
-              borderRadius: "10px",
-              lineHeight: 1.5,
-            }}
-          >
-            <strong>{message.sender}</strong>
-            <br />
-            {message.text}
-          </div>
-        ))}
+  <Message
+    key={`${message.sender}-${index}`}
+    sender={message.sender}
+    text={message.text}
+  />
+))}
       </div>
 
       <div

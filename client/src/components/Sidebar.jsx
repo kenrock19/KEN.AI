@@ -1,4 +1,9 @@
-function Sidebar({ onNewChat, conversations }) {
+function Sidebar({
+  onNewChat,
+  conversations,
+  onSelectChat,
+  onDeleteChat,
+}) {
   return (
     <div
       style={{
@@ -30,11 +35,37 @@ function Sidebar({ onNewChat, conversations }) {
     <li
       key={chat.id}
       style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "10px",
         padding: "8px 0",
-        cursor: "pointer",
       }}
     >
-      {chat.title}
+      <span
+        onClick={() => onSelectChat(chat.id)}
+        style={{
+          flex: 1,
+          cursor: "pointer",
+        }}
+      >
+        {chat.title}
+      </span>
+
+      <button
+        type="button"
+        onClick={() => onDeleteChat(chat.id)}
+        title="Delete chat"
+        style={{
+          background: "transparent",
+          border: "none",
+          color: "white",
+          cursor: "pointer",
+          fontSize: "16px",
+        }}
+      >
+        🗑️
+      </button>
     </li>
   ))}
 </ul>

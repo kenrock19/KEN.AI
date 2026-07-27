@@ -1,45 +1,48 @@
 import { useEffect, useState } from "react";
 
-function ChatWindow({ setChatTitle }) {
-  const [messages, setMessages] = useState(() => {
-  try {
-    const savedMessages = localStorage.getItem(
-      "kenai-current-chat"
-    );
+function ChatWindow({
+  chatId,
+  initialMessages = [],
+  setChatTitle,
+}) {
+  const [messages, setMessages] = useState(initialMessages);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-    return savedMessages ? JSON.parse(savedMessages) : [];
-  } catch {
-    return [];
-  }
-});  const [input, setInput] = useState("");
-useEffect(() => {
-  localStorage.setItem(
-    "kenai-current-chat",
-    JSON.stringify(messages)
-  );
-}, [messages]);
+  useEffect(() => {
+    setMessages(initialMessages || []);
+    setInput("");
+  }, [chatId, initialMessages]);
+
   async function sendMessage() {
-    if (!input.trim()) return;
+    const currentInput = input.trim();
+
+    if (!currentInput || isLoading) {
+      return;
+    }
 
     const userMessage = {
       sender: "You",
-      text: input,
+      text: currentInput,
     };
-    if (setChatTitle) {
-      setChatTitle(input);
-    }
-    setMessages((prev) => [...prev, userMessage]);
 
-    setMessages((prev) => [
-      ...prev,
+    const title =
+      messages.find((message) => message.sender === "You")?.text ||
+      currentInput;
+
+    const messagesWithThinking = [
+      ...messages,
+      userMessage,
       {
         sender: "KEN.AI",
         text: "Thinking...",
       },
-    ]);
+    ];
 
-    const currentInput = input;
+    setMessages(messagesWithThinking);
+    setChatTitle?.(title, messagesWithThinking);
     setInput("");
+    setIsLoading(true);
 
     try {
       const response = await fetch("/api/chat", {
@@ -55,30 +58,38 @@ useEffect(() => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "KEN.AI could not answer.");
+        throw new Error(
+          data.error || "KEN.AI could not answer."
+        );
       }
 
-      setMessages((prev) => {
-        const updated = [...prev];
+      setMessages((previous) => {
+        const updated = [...previous];
 
         updated[updated.length - 1] = {
           sender: "KEN.AI",
           text: data.reply,
         };
 
+        setChatTitle?.(title, updated);
         return updated;
       });
     } catch (error) {
-      setMessages((prev) => {
-        const updated = [...prev];
+      setMessages((previous) => {
+        const updated = [...previous];
 
         updated[updated.length - 1] = {
           sender: "KEN.AI",
-          text: error.message || "Unable to connect to server.",
+          text:
+            error.message ||
+            "Unable to connect to the KEN.AI server.",
         };
 
+        setChatTitle?.(title, updated);
         return updated;
       });
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -110,21 +121,20 @@ useEffect(() => {
           padding: "25px",
         }}
       >
-        {messages.map((msg, i) => (
+        {messages.map((message, index) => (
           <div
-            key={i}
+            key={`${message.sender}-${index}`}
             style={{
               marginBottom: "20px",
               background: "#183763",
               padding: "15px",
               borderRadius: "10px",
+              lineHeight: 1.5,
             }}
           >
-            <strong>{msg.sender}</strong>
-
+            <strong>{message.sender}</strong>
             <br />
-
-            {msg.text}
+            {message.text}
           </div>
         ))}
       </div>
@@ -137,29 +147,34 @@ useEffect(() => {
         }}
       >
         <textarea
-    value={input}
-    onChange={(e) => setInput(e.target.value)}
-    onKeyDown={(e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    }}
-    placeholder="Ask KEN.AI anything..."
-    rows={1}
-    style={{
-        flex: 1,
-        padding: "15px",
-        borderRadius: "10px",
-        border: "none",
-        fontSize: "16px",
-        resize: "none",
-        minHeight: "50px",
-    }}
-/>
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (
+              event.key === "Enter" &&
+              !event.shiftKey
+            ) {
+              event.preventDefault();
+              sendMessage();
+            }
+          }}
+          placeholder="Ask KEN.AI anything..."
+          rows={1}
+          disabled={isLoading}
+          style={{
+            flex: 1,
+            padding: "15px",
+            borderRadius: "10px",
+            border: "none",
+            fontSize: "16px",
+            resize: "none",
+            minHeight: "50px",
+          }}
+        />
 
         <button
           onClick={sendMessage}
+          disabled={isLoading}
           style={{
             marginLeft: "15px",
             padding: "15px 25px",
@@ -167,10 +182,11 @@ useEffect(() => {
             background: "#2d8cff",
             color: "white",
             border: "none",
-            cursor: "pointer",
+            cursor: isLoading ? "wait" : "pointer",
+            opacity: isLoading ? 0.65 : 1,
           }}
         >
-          Send
+          {isLoading ? "Thinking..." : "Send"}
         </button>
       </div>
     </div>

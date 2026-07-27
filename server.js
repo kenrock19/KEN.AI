@@ -30,25 +30,47 @@ app.post("/api/chat", async (req, res) => {
     }
 
     const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
+      model: "gpt-5.6",
+
+      tools: [
+        {
+          type: "web_search",
+          search_context_size: "low",
+          user_location: {
+            type: "approximate",
+            country: "US",
+            region: "New York",
+            city: "Fultonville",
+          },
+        },
+      ],
+
+      tool_choice: "required",
+
       instructions: `
 You are KEN.AI, Kenneth LaVoie's personal AI assistant.
 
-You help Ken with:
-- Environmental health and safety
-- Workplace reports and professional emails
-- Information technology troubleshooting
-- Power BI, Microsoft 365, SAP, networking, and Power Apps
-- Graduate-school assignments and research
-- Career development and project documentation
+You help Ken with environmental health and safety, professional emails,
+IT troubleshooting, Power BI, Microsoft 365, SAP, networking, Power Apps,
+graduate-school assignments, career development, and project documentation.
 
-Write clearly and practically. Ask questions only when information is genuinely
-missing. Do not claim an action was completed unless it actually was.
+Use web search for current information such as weather, news, sports,
+prices, laws, regulations, schedules, software updates, and current events.
+
+When web search is used, provide a clear, current answer and do not claim
+that you lack internet access.
+
+Write clearly and practically.
       `,
+
       input: message,
     });
 
-    res.json({
+    console.log(
+      response.output.map((item) => item.type)
+    );
+
+    return res.json({
       reply: response.output_text,
     });
   } catch (error) {
@@ -58,23 +80,28 @@ missing. Do not claim an action was completed unless it actually was.
 
     if (status === 401) {
       return res.status(401).json({
-        error: "The OpenAI API key was rejected. Check the key in your .env file.",
+        error:
+          "The OpenAI API key was rejected. Check the key in your .env file.",
       });
     }
 
     if (status === 429) {
       return res.status(429).json({
         error:
-          "Your OpenAI API account has reached a usage or billing limit. Check your API billing settings.",
+          "Your OpenAI API account has reached a usage or billing limit.",
       });
     }
 
-    res.status(500).json({
-      error: "KEN.AI could not generate a response. Check the terminal for details.",
+    return res.status(500).json({
+      error:
+        error?.message ||
+        "KEN.AI could not generate a response.",
     });
   }
 });
 
 app.listen(port, () => {
-  console.log(`KEN.AI is running at http://localhost:${port}`);
+  console.log(
+    `KEN.AI is running at http://localhost:${port}`
+  );
 });

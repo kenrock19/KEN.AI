@@ -4,8 +4,11 @@ import OpenAI from "openai";
 import db, {
   createConversation,
   deleteConversation,
+  deleteMemory,
   getConversations,
+  getMemories,
   getMessages,
+  saveMemory,
   saveMessage,
   updateConversationTitle,
 } from "./database/database.js";
@@ -139,6 +142,63 @@ app.delete(
     }
   }
 );
+app.get("/api/memories", async (req, res) => {
+  try {
+    const memories = await getMemories();
+
+    res.json(memories);
+  } catch (error) {
+    console.error("Unable to load memories:", error);
+
+    res.status(500).json({
+      error: "Unable to load memories.",
+    });
+  }
+});
+
+app.post("/api/memories", async (req, res) => {
+  try {
+    const content = req.body.content?.trim();
+
+    if (!content) {
+      return res.status(400).json({
+        error: "Memory content is required.",
+      });
+    }
+
+    const memory = await saveMemory(content);
+
+    res.status(201).json(memory);
+  } catch (error) {
+    console.error("Unable to save memory:", error);
+
+    res.status(500).json({
+      error: "Unable to save memory.",
+    });
+  }
+});
+
+app.delete("/api/memories/:id", async (req, res) => {
+  try {
+    const memoryId = Number(req.params.id);
+
+    if (!Number.isInteger(memoryId)) {
+      return res.status(400).json({
+        error: "Invalid memory ID.",
+      });
+    }
+
+    await deleteMemory(memoryId);
+
+    res.status(204).end();
+  } catch (error) {
+    console.error("Unable to delete memory:", error);
+
+    res.status(500).json({
+      error: "Unable to delete memory.",
+    });
+  }
+});
 app.post("/api/chat", async (req, res) => {
   try {
     const message = req.body.message?.trim();

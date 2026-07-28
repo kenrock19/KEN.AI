@@ -37,6 +37,13 @@ db.serialize(() => {
         ON DELETE CASCADE
     )
   `);
+    db.run(`
+    CREATE TABLE IF NOT EXISTS memories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      content TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 });
 
 export function createConversation(title = "New Chat") {
@@ -209,5 +216,73 @@ export function deleteConversation(id) {
     });
   });
 }
+export function saveMemory(content) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+        INSERT INTO memories (content)
+        VALUES (?)
+      `,
+      [content],
+      function (error) {
+        if (error) {
+          reject(error);
+          return;
+        }
 
+        resolve({
+          id: this.lastID,
+          content,
+        });
+      }
+    );
+  });
+}
+
+export function getMemories() {
+  return new Promise((resolve, reject) => {
+    db.all(
+      `
+        SELECT
+          id,
+          content,
+          created_at
+        FROM memories
+        ORDER BY created_at ASC, id ASC
+      `,
+      [],
+      (error, rows) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(rows);
+      }
+    );
+  });
+}
+
+export function deleteMemory(id) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+        DELETE FROM memories
+        WHERE id = ?
+      `,
+      [id],
+      function (error) {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve({
+          id,
+          changes: this.changes,
+        });
+      }
+    );
+  });
+}
 export default db;

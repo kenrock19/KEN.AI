@@ -145,7 +145,8 @@ app.delete(
 app.get("/api/memories", async (req, res) => {
   try {
     const memories = await getMemories();
-
+ 
+    
     res.json(memories);
   } catch (error) {
     console.error("Unable to load memories:", error);
@@ -208,7 +209,26 @@ const conversationId = Number(req.body.conversationId);
         error: "Please enter a message.",
       });
     }
+    if (!Number.isInteger(conversationId)) {
+  return res.status(400).json({
+    error: "A valid conversation ID is required.",
+  });
+}
 
+await saveMessage(conversationId, "You", message);
+
+const memories = await getMemories();
+
+const memoryText =
+  memories.length > 0
+    ? memories
+        .map((memory) => `- ${memory.content}`)
+        .join("\n")
+    : "No saved memories yet.";
+
+    console.log("===== CHAT MEMORY =====");
+console.log(memoryText);
+console.log("=======================");
     res.setHeader(
       "Content-Type",
       "text/plain; charset=utf-8"
@@ -250,7 +270,13 @@ You help Ken with:
 Use web search whenever the user asks for current or changing information,
 including weather, news, sports, prices, laws, regulations, schedules,
 software updates, company information, or current events.
+Saved information about Ken:
 
+${memoryText}
+
+Use this saved information whenever it is relevant.
+Do not mention the memory database unless Ken asks about it.
+Do not invent personal facts that are not listed above.
 Write clear, practical answers using Markdown when helpful.
 Never claim an action was completed unless it actually was.
       `,

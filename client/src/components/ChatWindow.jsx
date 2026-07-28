@@ -46,35 +46,82 @@ function ChatWindow({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: currentInput,
-        }),
-      });
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+  message: currentInput,
+  conversationId: chatId,
+}),
+  });
 
-      const data = await response.json();
+  if (!response.ok) {
+    const errorText = await response.text();
 
-      if (!response.ok) {
-        throw new Error(
-          data.error || "KEN.AI could not answer."
-        );
-      }
+    try {
+      const errorData = JSON.parse(errorText);
 
-      setMessages((previous) => {
-        const updated = [...previous];
+      throw new Error(
+        errorData.error || "KEN.AI could not answer."
+      );
+    } catch {
+      throw new Error(
+        errorText || "KEN.AI could not answer."
+      );
+    }
+  }
 
-        updated[updated.length - 1] = {
-          sender: "KEN.AI",
-          text: data.reply,
-        };
+  if (!response.body) {
+    throw new Error(
+      "The server did not return a response stream."
+    );
+  }
 
-        setChatTitle?.(title, updated);
-        return updated;
-      });
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let streamedText = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+
+    if (done) {
+      break;
+    }
+
+    streamedText += decoder.decode(value, {
+      stream: true,
+    });
+
+    const updatedMessages = [
+      ...messages,
+      userMessage,
+      {
+        sender: "KEN.AI",
+        text: streamedText,
+      },
+    ];
+
+    setMessages(updatedMessages);
+    setChatTitle?.(title, updatedMessages);
+  }
+
+  streamedText += decoder.decode();
+
+  const finalMessages = [
+    ...messages,
+    userMessage,
+    {
+      sender: "KEN.AI",
+      text:
+        streamedText ||
+        "KEN.AI did not return any text.",
+    },
+  ];
+
+  setMessages(finalMessages);
+  setChatTitle?.(title, finalMessages);
     } catch (error) {
       setMessages((previous) => {
         const updated = [...previous];
